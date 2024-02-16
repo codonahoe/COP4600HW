@@ -105,4 +105,7 @@ def read_processes_from_file(filename):
     return processcount, runfor, use, quantum, processes
 
 if __name__ == "__main__":
-    i = 0
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: scheduler-get.py <input file>")
+        sys.exit(1)
