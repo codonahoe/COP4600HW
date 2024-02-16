@@ -1,7 +1,7 @@
 
 # HW1 OS
 #TODO: read in file and choose algo based on inputs....display results
-#TODO: SJF && RR Algos
+#TODO: test & debug
 
 class Process: #structure to represent a processes
     def __init__(self, arrival_time, execution_time, pid):
@@ -45,6 +45,23 @@ def SJF_Scheduler(processes): #shortest job first
 
 def RR_Scheduler(processes, q_value): #round robin
     cur_time = 0
+    remaining_processes = processes.copy()
+    while remaining_processes:
+        for process in remaining_processes:
+            if process.arrival_time <= cur_time:
+                process.start_time = cur_time
+                process.response_time = cur_time - process.arrival_time
+                if process.execution_time <= q_value:
+                    cur_time += process.execution_time
+                    process.finish_time = cur_time
+                    process.wait_time = process.start_time - process.arrival_time
+                    remaining_processes.remove(process)
+                else:
+                    cur_time += q_value
+                    process.execution_time -= q_value
+            else:
+                cur_time += 1
+
 
 def calculate_performance(processes): #find out how turnaround, wait time,and response time performs
     turnaround_time = 0
