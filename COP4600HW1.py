@@ -1,5 +1,7 @@
 
 # HW1 OS
+#TODO: read in file and choose algo based on inputs....display results
+#TODO: SJF && RR
 
 class Process: #structure to represent a processes
     def __init__(self, arrival_time, execution_time, pid):
