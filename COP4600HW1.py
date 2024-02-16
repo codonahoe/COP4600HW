@@ -27,8 +27,21 @@ def FIFO_Scheduler(processes): #first in first out
         current_time = process.finish_time
 
 def SJF_Scheduler(processes): #shortest job first
-    cur_time = 0;
-    #for process in processes:
+    processes.sort(key=lambda x: (x.arrival_time, x.execution_time))
+    cur_time = 0
+    remaining_processes = processes.copy()
+    while remaining_processes:
+        next_process = min(remaining_processes, key=lambda x: x.execution_time)
+        if next_process.arrival_time > cur_time:
+            cur_time = next_process.arrival_time
+        next_process.start_time = cur_time
+        next_process.response_time = cur_time - next_process.arrival_time
+        cur_time += 1
+        next_process.execution_time -= 1
+        if next_process.execution_time == 0:
+            next_process.finish_time = cur_time
+            next_process.wait_time = next_process.start_time - next_process.arrival_time
+            remaining_processes.remove(next_process)
 
 def RR_Scheduler(processes, q_value): #round robin
     cur_time = 0
@@ -42,8 +55,8 @@ def calculate_performance(processes): #find out how turnaround, wait time,and re
         turnaround_time += process.finish_time - process.arrival_time
         wait_time += process.wait_time
         response_time += process.response_time
-    num_processes = len(processes) 
     #calculate the averages
+    num_processes = len(processes) 
     avg_turnaround_time = turnaround_time / num_processes
     avg_wait_time = wait_time / num_processes
     avg_response_time = response_time / num_processes
