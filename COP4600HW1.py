@@ -109,6 +109,14 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: scheduler-get.py <input file>")
         sys.exit(1)
-        
+
     input_file = sys.argv[1]
     processcount, runfor, use, quantum, processes = read_processes_from_file(input_file)
+
+    if use == 'rr' and quantum is None:
+        print("Error: Missing quantum parameter when use is 'rr'")
+        sys.exit(1)
+
+    if any(param is None for param in [processcount, runfor, use]):
+        print("Error: Missing parameter(s).")
+        sys.exit(1)
