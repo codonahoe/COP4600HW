@@ -4,10 +4,10 @@
 #TODO: test & debug
 
 class Process: #structure to represent a processes
-    def __init__(self, arrival_time, execution_time, pid):
+    def __init__(self, name, arrival_time, execution_time):
         self.arrival_time = arrival_time
         self.execution_time = execution_time
-        self.pid = pid
+        self.name = name
         self.status = "Ready"
         self.start_time = None
         self.finish_time = None
@@ -78,3 +78,31 @@ def calculate_performance(processes): #find out how turnaround, wait time,and re
     avg_wait_time = wait_time / num_processes
     avg_response_time = response_time / num_processes
     return avg_turnaround_time, avg_wait_time, avg_response_time
+
+def read_processes_from_file(filename):
+    processes = []
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        processcount = None
+        runfor = None
+        use = None
+        quantum = None
+        for line in lines:
+            parts = line.strip().split()
+            if parts[0] == 'processcount':
+                processcount = int(parts[1])
+            elif parts[0] == 'runfor':
+                runfor = int(parts[1])
+            elif parts[0] == 'use':
+                use = parts[1]
+            elif parts[0] == 'quantum':
+                quantum = int(parts[1])
+            elif parts[0] == 'process':
+                name, arrival_time, execution_time = parts[1], int(parts[2]), int(parts[3])
+                processes.append(Process(name, arrival_time, execution_time))
+            elif parts[0] == 'end':
+                break
+    return processcount, runfor, use, quantum, processes
+
+if __name__ == "__main__":
+    i = 0
