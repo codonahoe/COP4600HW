@@ -1,3 +1,5 @@
+# Group 19 - Sydney Baldwin, Devon Lister, Talia Martin, Casey O'Donahoe
+
 import sys
 from collections import deque
 
@@ -166,10 +168,88 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
                 output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time} \n")
                 index += 1
 
+def sjf_scheduler(processcount, runfor, processes):
+    output_filename = sys.argv[1].replace('.in', '.out')
+
+    # Initialize sorted_order list to keep track of original order of processes
+    sorted_order = [process.name for process in processes]
+
+    with open(output_filename, 'w') as output_file:
+        output_file.write(f"{processcount} processes\n")
+        output_file.write("Using preemptive Shortest Job First\n")
+        
+        current_time = 0
+        selection_times = []
+        completion_times = []
+        original_burst = [process.burst for process in processes]
+        # human edit - added selections list to keep track of all selections
+        selections = []
+        
+        while current_time < runfor:
+            shortest_burst = float('inf')
+            shortest_process = None
+
+            for i, process in enumerate(processes):
+                if process.arrival <= current_time and process.burst < shortest_burst and process.burst > 0:
+                    shortest_burst = process.burst
+                    shortest_process = i
+
+            # Check for process arrivals
+            for process in processes:
+                if process.arrival == current_time:
+                    output_file.write(f"Time {current_time} : {process.name} arrived\n")
+
+            # human edit - check for process completions
+            for x in range (len(completion_times)):
+                if completion_times[x][1] == current_time:
+                    output_file.write(f"Time {current_time} : {processes[completion_times[x][0]].name} finished\n")
+
+            if shortest_process is None:
+                output_file.write(f"Time {current_time} : Idle\n")
+                current_time += 1
+                continue
+
+            # human edit - fixed issue with certain selections not being written to file
+            if selections == [] or shortest_process != selections[len(selections)-1]:
+                selections.append(shortest_process)
+                output_file.write(f"Time {current_time} : {processes[shortest_process].name} selected (burst {processes[shortest_process].burst})\n")
+            
+            if shortest_process not in [x[0] for x in selection_times]:
+                selection_times.append((shortest_process, current_time))
+
+            processes[shortest_process].burst -= 1
+
+            # human edit - fixed issue with incorrect completion times
+            if processes[shortest_process].burst == 0 and shortest_process not in [x[0] for x in completion_times]:
+                completion_times.append((shortest_process, current_time+1))
+
+            current_time += 1
+
+        output_file.write(f"Finished at time {runfor}\n\n") # human edit - added extra newline for formatting purposes
+
+        # Sort selection_times and completion_times according to sorted_order
+        selection_times.sort(key=lambda x: sorted_order.index(processes[x[0]].name))
+        completion_times.sort(key=lambda x: sorted_order.index(processes[x[0]].name))
+
+        for i, process in enumerate(processes):
+            if i not in [x[0] for x in completion_times]:
+                output_file.write(f"{process.name} did not finish\n")
+            else:
+                # human edit - fixed selection_times index
+                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[i], selection_times[i][1], completion_times[i][1])
+                output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time}\n")
+
+# def rr function
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: scheduler-get.py <input file>")
     else:
         params = read_input_file(sys.argv[1])
         if params:
-            fifo_scheduler(params.runfor, params.processes, params.processcount) #human edit - added processcount as a parameter
+            if params.use == "fcfs":
+                fifo_scheduler(params.processcount, params.runfor, params.processes)
+            elif params.use == "sjf":
+                sjf_scheduler(params.processcount, params.runfor, params.processes)
+            # else if use = "rr"...
+            # else print error message
