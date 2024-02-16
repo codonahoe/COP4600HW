@@ -62,7 +62,6 @@ def RR_Scheduler(processes, q_value): #round robin
             else:
                 cur_time += 1
 
-
 def calculate_performance(processes): #find out how turnaround, wait time,and response time performs
     turnaround = 0
     response = 0
