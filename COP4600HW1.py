@@ -1,7 +1,7 @@
 
 # HW1 OS
 
-class Process: 
+class Process: #structure to represent a processes
     def __init__(self, arrival_time, execution_time, pid):
         self.arrival_time = arrival_time
         self.execution_time = execution_time
@@ -14,8 +14,9 @@ class Process:
 
 def FIFO_Scheduler(processes): #first in first out
     cur_time = 0
-    for process in processes: #for each process in our queue
-        if process.arrival_time > cur_time: #then the current time is updated
+    #for each process in our queue
+    for process in processes:
+        if process.arrival_time > cur_time: #then the current time is updated since it is now first
             cur_time = process.arrival_time
         process.start_time = current_time
         process.response_time = current_time - process.arrival_time
@@ -34,11 +35,13 @@ def calculate_performance(processes): #find out how turnaround, wait time,and re
     turnaround_time = 0
     response_time = 0
     wait_time = 0
-    for process in processes: #find total times in order to get an average
+    #find total times of each process in order to get an average
+    for process in processes:
         turnaround_time += process.finish_time - process.arrival_time
         wait_time += process.wait_time
         response_time += process.response_time
-    num_processes = len(processes)
+    num_processes = len(processes) 
+    #calculate the averages
     avg_turnaround_time = turnaround_time / num_processes
     avg_wait_time = wait_time / num_processes
     avg_response_time = response_time / num_processes
