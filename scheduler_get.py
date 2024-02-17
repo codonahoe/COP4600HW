@@ -239,7 +239,110 @@ def sjf_scheduler(processcount, runfor, processes):
                 wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[i], selection_times[i][1], completion_times[i][1])
                 output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time}\n")
 
-# def rr function
+def rr_scheduler(processcount, runfor, quantum, processes):
+    output_filename = sys.argv[1].replace('.in', '.out')
+
+    # Initialize lists
+    original_burst = [process.burst for process in processes]
+    selection_times = []
+    completion_times = []
+    process_names = [process.name for process in processes]
+
+    # Sort processes by arrival time
+    sorted_processes = sorted(processes, key=lambda x: x.arrival)
+
+    # Create a queue to hold processes
+    process_queue = deque()
+
+    # Initialize quantum counter
+    quantum_counter = quantum
+
+    # Initialize currently running process
+    running_process = None
+
+    with open(output_filename, 'w') as output_file:
+        output_file.write(f"{processcount} processes\n")
+        output_file.write("Using Round-Robin\n")
+        output_file.write(f"Quantum {quantum}\n\n") # human edit - added extra newline for formatting
+
+        current_time = 0
+        index = 0
+
+        # Main loop
+        while current_time < runfor:
+            # Check for arrived processes
+            while index < len(sorted_processes) and sorted_processes[index].arrival == current_time:
+                process_queue.append(sorted_processes[index])
+                output_file.write(f"Time {current_time} : {sorted_processes[index].name} arrived\n")
+                index += 1
+
+            if running_process:
+                running_process.burst -= 1
+                if running_process.burst == 0:
+                    output_file.write(f"Time {current_time} : {running_process.name} finished\n")
+                    completion_times.append((running_process.name, current_time))
+                    quantum_counter = 0
+                    # Check if there is a process waiting in the queue
+                    if process_queue:
+                        next_process = process_queue.popleft()
+                        output_file.write(f"Time {current_time} : {next_process.name} selected (burst {next_process.burst})\n")
+                        # Add to selection times if not already selected
+                        if next_process.name not in [x[0] for x in selection_times]:
+                            selection_times.append((next_process.name, current_time))
+                        running_process = next_process
+                    else:
+                        running_process = None
+
+            # Check if quantum is reached
+            if quantum_counter == quantum:
+                # Check for processes in queue
+                if process_queue:
+                    next_process = process_queue.popleft()
+                    output_file.write(f"Time {current_time} : {next_process.name} selected (burst {next_process.burst})\n")
+                    # Add to selection times if not already selected
+                    if next_process.name not in [x[0] for x in selection_times]:
+                        selection_times.append((next_process.name, current_time))
+                    # Check if there is a currently running process
+                    if running_process:
+                        # Append the currently running process to the end of the queue
+                        process_queue.append(running_process)
+                    # Set next_process as the currently running process
+                    running_process = next_process
+                    # Reset quantum counter
+                # If there is no process in the queue, continue running the currently running process
+                else:
+                    if running_process:
+                        output_file.write(f"Time {current_time} : {running_process.name} selected (burst {running_process.burst})\n")
+                        # human edit - add this selection to selection_times if applicable
+                        if running_process.name not in [x[0] for x in selection_times]:
+                            selection_times.append((running_process.name, current_time))
+                quantum_counter = 0 # human edit - moved quantum_counter edit out of nested if
+
+            if not running_process:
+                output_file.write(f"Time {current_time} : Idle\n")
+
+            # Increment quantum counter
+            quantum_counter += 1
+
+            # Increment current time
+            current_time += 1
+
+        output_file.write(f"Finished at time {runfor}\n\n") # human edit - added extra newline for formatting
+
+        # Sort selection_times and completion_times according to process_names order
+        selection_times.sort(key=lambda x: process_names.index(x[0]))
+        completion_times.sort(key=lambda x: process_names.index(x[0]))
+
+        # Check if any process did not finish
+        for process in process_names:
+            if process not in [x[0] for x in completion_times]:
+                output_file.write(f"{process} did not finish\n")
+
+        # Calculate wait, turnaround, and response times
+        for i, process in enumerate(processes):
+            if process.name in [x[0] for x in completion_times]:
+                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[i], selection_times[i][1], completion_times[i][1])
+                output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time}\n")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -251,5 +354,7 @@ if __name__ == "__main__":
                 fifo_scheduler(params.processcount, params.runfor, params.processes)
             elif params.use == "sjf":
                 sjf_scheduler(params.processcount, params.runfor, params.processes)
-            # else if use = "rr"...
-            # else print error message
+            elif params.use == "rr":
+                rr_scheduler(params.processcount, params.runfor, params.quantum, params.processes)
+            else:
+                print("Error: Invalid parameter <use>")
