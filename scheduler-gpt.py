@@ -11,7 +11,7 @@ class Process:
 def FIFO_scheduler(processes, runfor):
     current_time = 0
     events = []
-    while current_time <= runfor:
+    while current_time < runfor:
         event = None
         for process in processes:
             if process.arrival == current_time:
@@ -22,10 +22,11 @@ def FIFO_scheduler(processes, runfor):
                 process.start_time = current_time
                 process.response_time = current_time - process.arrival
                 event = process.name + " finished" 
+                finish = current_time+process.burst
                 events.append((current_time+process.burst, event))
                 processes.remove(process)
                 break
-        if not event:
+        if not event and (current_time > finish):
             event = "idle"
             events.append((current_time, event))
         current_time += 1

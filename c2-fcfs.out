@@ -1,30 +1,15 @@
 Number of processes: 2
 Algorithm used: fcfs
 Time Events:
-Time 0 P1arrived
-Time 0 P1selected
-Time 5 P1finished
-Time 1 idle
-Time 2 idle
-Time 3 idle
-Time 4 idle
-Time 5 idle
+Time 0 P1 arrived
+Time 0 P1 selected
+Time 5 P1 finished
 Time 6 idle
-Time 7 P2arrived
-Time 7 P2selected
-Time 16 P2finished
-Time 8 idle
-Time 9 idle
-Time 10 idle
-Time 11 idle
-Time 12 idle
-Time 13 idle
-Time 14 idle
-Time 15 idle
-Time 16 idle
+Time 7 P2 arrived
+Time 7 P2 selected
+Time 16 P2 finished
 Time 17 idle
 Time 18 idle
 Time 19 idle
-Time 20 idle
 Finished at: 20
 All processes completed within runtime.
