@@ -97,7 +97,7 @@ def read_processes_from_file(filename):
             elif parts[0] == 'quantum':
                 quantum = int(parts[1])
             elif parts[0] == 'process':
-                name, arrival_time, burst = parts[1], int(parts[2]), int(parts[3])
+                name, arrival_time, burst = parts[2], int(parts[4]), int(parts[6])
                 processes.append(Process(name, arrival_time, burst))
             elif parts[0] == 'end':
                 break
@@ -118,4 +118,20 @@ if __name__ == "__main__":
 
     if any(param is None for param in [processcount, runfor, use]):
         print("Error: Missing parameter(s).")
+        sys.exit(1)
+
+    print("Process Count:", processcount)
+    print("Algorithm:", use)
+
+    if use == 'fcfs':
+        print("\nFIFO scheduling:")
+        FIFO_Scheduler(processes)
+    elif use == 'sjf':
+        print("\nPreemptive SJF scheduling:")
+        SJF_Scheduler(processes)
+    elif use == 'rr':
+        print("\nRound Robin scheduling:")
+        RR_Scheduler(processes, quantum)
+    else:
+        print("Invalid algorithm specified.")
         sys.exit(1)
