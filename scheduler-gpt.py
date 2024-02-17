@@ -37,15 +37,22 @@ def preemptive_SJF_scheduler(processes, runfor):
     processes.sort(key=lambda x: (x.arrival, x.burst))
     remaining_processes = processes.copy()
     while remaining_processes:
+        event = None
         next_process = min(remaining_processes, key=lambda x: x.burst)
         if next_process.arrival > current_time:
             current_time = next_process.arrival
+            event = next_process.name + " arrived"
+            events.append((current_time,event))
         next_process.start_time = current_time
+        event = next_process.name + " selected"
+        events.append((current_time,event))
         next_process.response_time = current_time - next_process.arrival
         current_time += 1
         next_process.burst -= 1
         if next_process.burst == 0:
             next_process.finish_time = current_time
+            event = next_process.name + " finished"
+            events.append((current_time,event))
             next_process.wait_time = next_process.start_time - next_process.arrival
             remaining_processes.remove(next_process)
     return events
@@ -53,19 +60,27 @@ def preemptive_SJF_scheduler(processes, runfor):
 def round_robin_scheduler(processes, quantum, runfor):
     current_time = 0
     events = []
-    while current_time <= runfor:
+    remaining_processes = processes.copy()
+    while remaining_processes:
         event = None
-        for process in processes:
-            if process.arrival == current_time:
-                event = process.name + "arrived"
+        for process in remaining_processes:
+            if process.arrival_time <= current_time:
                 process.start_time = current_time
-                process.response_time = current_time - process.arrival
-                processes.remove(process)
-                break
-        if not event:
-            event = "Idle"
-        events.append((current_time, event))
-        current_time += 1
+                event = process.name + " selected"
+                events.append((current_time,event))
+                process.response_time = current_time - process.arrival_time
+                if process.execution_time <= quantum:
+                    current_time += process.execution_time
+                    process.finish_time = current_time
+                    event = process.name + " finished"
+                    events.append((current_time,event))
+                    process.wait_time = process.start_time - process.arrival_time
+                    remaining_processes.remove(process)
+                else:
+                    current_time += quantum
+                    process.execution_time -= quantum
+            else:
+                current_time += 1
     return events
 
 def write_results_to_file(filename,processcount, use, quantum, events, unfinished_processes, runfor):
