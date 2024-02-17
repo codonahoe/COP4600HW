@@ -1,0 +1,20 @@
+Number of processes: 5
+Algorithm used: fcfs
+Time Events:
+Time 0 P2arrived
+Time 0 P2selected
+Time 9 P2finished
+Time 7 P1arrived
+Time 7 P1selected
+Time 12 P1finished
+Time 8 P4arrived
+Time 8 P4selected
+Time 12 P4finished
+Time 9 P3arrived
+Time 9 P3selected
+Time 12 P3finished
+Time 11 P5arrived
+Time 11 P5selected
+Time 12 P5finished
+Finished at: 12
+All processes completed within runtime.

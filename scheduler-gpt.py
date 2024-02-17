@@ -15,33 +15,39 @@ def FIFO_scheduler(processes, runfor):
         event = None
         for process in processes:
             if process.arrival == current_time:
-                event = "Arrived: " + process.name
+                event = process.name + " arrived"
+                events.append((current_time, event))
+                event = process.name + " selected"
+                events.append((current_time, event))
                 process.start_time = current_time
                 process.response_time = current_time - process.arrival
+                event = process.name + " finished" 
+                events.append((current_time+process.burst, event))
                 processes.remove(process)
                 break
         if not event:
-            event = "Idle"
-        events.append((current_time, event))
+            event = "idle"
+            events.append((current_time, event))
         current_time += 1
     return events
 
 def preemptive_SJF_scheduler(processes, runfor):
     current_time = 0
     events = []
-    while current_time <= runfor:
-        event = None
-        for process in processes:
-            if process.arrival == current_time:
-                event = "Arrived: " + process.name
-                process.start_time = current_time
-                process.response_time = current_time - process.arrival
-                processes.remove(process)
-                break
-        if not event:
-            event = "Idle"
-        events.append((current_time, event))
+    processes.sort(key=lambda x: (x.arrival, x.burst))
+    remaining_processes = processes.copy()
+    while remaining_processes:
+        next_process = min(remaining_processes, key=lambda x: x.burst)
+        if next_process.arrival > current_time:
+            current_time = next_process.arrival
+        next_process.start_time = current_time
+        next_process.response_time = current_time - next_process.arrival
         current_time += 1
+        next_process.burst -= 1
+        if next_process.burst == 0:
+            next_process.finish_time = current_time
+            next_process.wait_time = next_process.start_time - next_process.arrival
+            remaining_processes.remove(next_process)
     return events
 
 def round_robin_scheduler(processes, quantum, runfor):
@@ -51,7 +57,7 @@ def round_robin_scheduler(processes, quantum, runfor):
         event = None
         for process in processes:
             if process.arrival == current_time:
-                event = "Arrived: " + process.name
+                event = process.name + "arrived"
                 process.start_time = current_time
                 process.response_time = current_time - process.arrival
                 processes.remove(process)
@@ -62,7 +68,7 @@ def round_robin_scheduler(processes, quantum, runfor):
         current_time += 1
     return events
 
-def write_results_to_file(filename,processcount, use, quantum, events, unfinished_processes):
+def write_results_to_file(filename,processcount, use, quantum, events, unfinished_processes, runfor):
     with open(filename, "w") as file:
         file.write("Number of processes: {}\n".format(processcount))
         file.write("Algorithm used: {}\n".format(use))
@@ -70,8 +76,8 @@ def write_results_to_file(filename,processcount, use, quantum, events, unfinishe
             file.write("Quantum: {}\n".format(quantum))
         file.write("Time Events:\n")
         for event in events:
-            file.write("Time: {}, Event: {}\n".format(event[0], event[1]))
-        file.write("Finished at: {}\n".format(events[-1][0]))
+            file.write("Time {} {}\n".format(event[0], event[1]))
+        file.write("Finished at: {}\n".format(runfor))
         if unfinished_processes:
             file.write("Unfinished processes: {}\n".format(", ".join(unfinished_processes)))
         else:
@@ -105,7 +111,7 @@ def read_processes_from_file(filename):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print("Usage: scheduler-get.py <input file>")
+        print("Usage: scheduler-gpt.py <input file>")
         sys.exit(1)
 
     input_file = sys.argv[1]
@@ -136,6 +142,6 @@ if __name__ == "__main__":
 
     unfinished_processes = [process.name for process in processes if process.burst > 0]
 
-    write_results_to_file(output_file, processcount, use, quantum, events, unfinished_processes)
+    write_results_to_file(output_file, processcount, use, quantum, events, unfinished_processes, runfor)
 
-    print("Results written to input.out file.")
+    print("Results written to output.out file.")
