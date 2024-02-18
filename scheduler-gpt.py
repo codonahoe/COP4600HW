@@ -8,6 +8,7 @@ class Process:
         self.finish_time = None
         self.response_time = None
         self.wait_time = None
+        self.selected = False
 
 def FIFO_scheduler(processes, runfor):
     current_time = 0
@@ -36,7 +37,7 @@ def FIFO_scheduler(processes, runfor):
             events.append((current_time, event))
         current_time += 1
     return events
-
+"""
 def preemptive_SJF_scheduler(processes, runfor):
     current_time = 0
     events = []
@@ -67,15 +68,85 @@ def preemptive_SJF_scheduler(processes, runfor):
         current_time +=1
     return events
 
-
-def round_robin_scheduler(processes, quantum, runfor):
-    current_time = -1
+def preemptive_SJF_scheduler(processes, runfor):
+    current_time = 0
     events = []
+    processes.sort(key=lambda x: (x.arrival, x.burst))
     remaining_processes = processes.copy()
     while remaining_processes:
         event = None
+        next_process = min(remaining_processes, key=lambda x: x.remaining_time)
+        if next_process.arrival >= current_time:
+            current_time = next_process.arrival
+            event = next_process.name + " arrived"
+            events.append((current_time, event))
+        if not next_process.selected:  # Only add "selected" event if the process has not been selected before
+            next_process.start_time = current_time
+            next_process.response_time = current_time - next_process.arrival
+            event = next_process.name + " selected"
+            events.append((current_time, event))
+            next_process.selected = True
+        current_time += 1
+        next_process.remaining_time -= 1
+        if next_process.remaining_time == 0:
+            next_process.finish_time = current_time
+            event = next_process.name + " finished"
+            next_process.remaining_time = 0
+            events.append((current_time, event))
+            next_process.wait_time = next_process.start_time - next_process.arrival
+            remaining_processes.remove(next_process)
+    while current_time < runfor:
+        events.append((current_time, "idle"))
+        current_time += 1
+    return events
+"""
+
+def preemptive_SJF_scheduler(processes, runfor):
+    current_time = 0
+    events = []
+    processes.sort(key=lambda x: (x.arrival, x.burst))
+    remaining_processes = processes.copy()
+    while remaining_processes:
+        event = None
+        next_process = min(remaining_processes, key=lambda x: x.remaining_time)
+        if next_process.arrival > current_time:
+            current_time = next_process.arrival
+            event = next_process.name + " arrived"
+            events.append((current_time, event))
+        if not next_process.selected:
+            next_process.start_time = current_time
+            next_process.response_time = current_time - next_process.arrival
+            event = next_process.name + " selected"
+            events.append((current_time, event))
+            next_process.selected = True
+        current_time += 1
+        next_process.remaining_time -= 1
+        if next_process.remaining_time == 0:
+            next_process.finish_time = current_time
+            event = next_process.name + " finished"
+            next_process.remaining_time = 0
+            events.append((current_time, event))
+            next_process.wait_time = next_process.start_time - next_process.arrival
+            remaining_processes.remove(next_process)
+            if remaining_processes:
+                next_arrival = min(p.arrival for p in remaining_processes)
+                idle_ticks = next_arrival - current_time
+                for _ in range(idle_ticks):
+                    events.append((current_time, "idle"))
+                    current_time += 1
+    while current_time < runfor:
+        events.append((current_time, "idle"))
+        current_time += 1
+    return events
+
+def round_robin_scheduler(processes, quantum, runfor):
+    current_time = 0
+    events = []
+    remaining_processes = processes.copy()
+    while remaining_processes and current_time < runfor:
+        event = None
         for process in remaining_processes:
-            if process.arrival == current_time:
+            if process.arrival <= current_time and process.burst == process.remaining_time:
                 event = process.name + " arrived"
                 events.append((current_time,event))
             if process.arrival <= current_time:
@@ -165,13 +236,10 @@ if __name__ == "__main__":
 
     events = []
     if use == 'fcfs':
-        print("\nFIFO scheduling:")
         events = FIFO_scheduler(processes, runfor)
     elif use == 'sjf':
-        print("\nPreemptive SJF scheduling:")
         events = preemptive_SJF_scheduler(processes, runfor)
     elif use == 'rr':
-        print("\nRound Robin scheduling:")
         events = round_robin_scheduler(processes, quantum, runfor)
     else:
         print("Invalid algorithm specified.")
