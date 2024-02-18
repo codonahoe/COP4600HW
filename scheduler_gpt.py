@@ -350,8 +350,9 @@ if __name__ == "__main__":
     else:
         params = read_input_file(sys.argv[1])
         if params:
+            # human edit - fixed ChatGPT's reordering of parameters
             if params.use == "fcfs":
-                fifo_scheduler(params.processcount, params.runfor, params.processes)
+                fifo_scheduler(params.runfor, params.processes, params.processcount)
             elif params.use == "sjf":
                 sjf_scheduler(params.processcount, params.runfor, params.processes)
             elif params.use == "rr":
