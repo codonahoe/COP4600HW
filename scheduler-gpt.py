@@ -102,6 +102,7 @@ def round_robin_scheduler(processes, quantum, runfor):
     return events
 
 def write_results_to_file(processes,filename,processcount, use, quantum, events, unfinished_processes, runfor):
+    events.sort(key=lambda x: x[0])
     with open(filename, "w") as file:
         file.write("Number of processes: {}\n".format(processcount))
         file.write("Algorithm used: {}\n".format(use))
