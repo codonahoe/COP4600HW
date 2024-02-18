@@ -1,0 +1,28 @@
+Number of processes: 2
+Algorithm used: sjf
+Time Events:
+Time 0 P1 selected
+Time 1 P1 selected
+Time 2 P1 selected
+Time 3 P1 selected
+Time 4 P1 selected
+Time 5 P1 finished
+Time 7 P2 arrived
+Time 7 P2 selected
+Time 8 P2 selected
+Time 9 P2 selected
+Time 10 P2 selected
+Time 11 P2 selected
+Time 12 P2 selected
+Time 13 P2 selected
+Time 14 P2 selected
+Time 15 P2 selected
+Time 16 P2 finished
+Time 16 idle
+Time 17 idle
+Time 18 idle
+Time 19 idle
+Finished at: 20
+P1 wait 4 turnaround 1 response 4
+P2 wait 8 turnaround 1 response 8
+All processes completed within runtime.

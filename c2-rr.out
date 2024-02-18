@@ -2,21 +2,18 @@ Number of processes: 2
 Algorithm used: rr
 Quantum: 2
 Time Events:
-Time: 0, Event: Arrived: P2
-Time: 1, Event: Idle
-Time: 2, Event: Idle
-Time: 3, Event: Arrived: P1
-Time: 4, Event: Idle
-Time: 5, Event: Idle
-Time: 6, Event: Idle
-Time: 7, Event: Idle
-Time: 8, Event: Idle
-Time: 9, Event: Idle
-Time: 10, Event: Idle
-Time: 11, Event: Idle
-Time: 12, Event: Idle
-Time: 13, Event: Idle
-Time: 14, Event: Idle
-Time: 15, Event: Idle
+Time 0 P2 arrived
+Time 0 P2 selected (burst 9)
+Time 3 P2 selected (burst 7)
+Time 5 P1 selected (burst 5)
+Time 7 P2 selected (burst 5)
+Time 9 P1 selected (burst 3)
+Time 11 P2 selected (burst 3)
+Time 13 P1 selected (burst 1)
+Time 14 P1 finished
+Time 14 P2 selected (burst 1)
+Time 15 P2 finished
 Finished at: 15
+P1 wait 10 turnaround 1 response 10
+P2 wait 14 turnaround 1 response 14
 All processes completed within runtime.

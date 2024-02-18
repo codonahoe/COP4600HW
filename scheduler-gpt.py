@@ -3,6 +3,7 @@ class Process:
         self.name = name
         self.arrival = arrival
         self.burst = burst
+        self.remaining_time = burst
         self.start_time = None
         self.finish_time = None
         self.response_time = None
@@ -11,9 +12,10 @@ class Process:
 def FIFO_scheduler(processes, runfor):
     current_time = 0
     events = []
+    processesCopy = processes.copy()
     while current_time < runfor:
         event = None
-        for process in processes:
+        for process in processesCopy:
             if process.arrival == current_time:
                 event = process.name + " arrived"
                 events.append((current_time, event))
@@ -21,12 +23,15 @@ def FIFO_scheduler(processes, runfor):
                 events.append((current_time, event))
                 process.start_time = current_time
                 process.response_time = current_time - process.arrival
+                process.wait_time = process.start_time - process.arrival
                 event = process.name + " finished" 
                 finish = current_time+process.burst
+                process.finish_time = finish
+                process.remaining_time = 0
                 events.append((current_time+process.burst, event))
-                processes.remove(process)
+                processesCopy.remove(process)
                 break
-        if not event and (current_time > finish):
+        if not event and (current_time >= finish):
             event = "idle"
             events.append((current_time, event))
         current_time += 1
@@ -39,52 +44,64 @@ def preemptive_SJF_scheduler(processes, runfor):
     remaining_processes = processes.copy()
     while remaining_processes:
         event = None
-        next_process = min(remaining_processes, key=lambda x: x.burst)
+        next_process = min(remaining_processes, key=lambda x: x.remaining_time)
         if next_process.arrival > current_time:
             current_time = next_process.arrival
             event = next_process.name + " arrived"
             events.append((current_time,event))
         next_process.start_time = current_time
+        next_process.response_time = current_time - next_process.arrival
         event = next_process.name + " selected"
         events.append((current_time,event))
-        next_process.response_time = current_time - next_process.arrival
         current_time += 1
-        next_process.burst -= 1
-        if next_process.burst == 0:
+        next_process.remaining_time -= 1
+        if next_process.remaining_time == 0:
             next_process.finish_time = current_time
             event = next_process.name + " finished"
+            next_process.remaining_time = 0
             events.append((current_time,event))
             next_process.wait_time = next_process.start_time - next_process.arrival
             remaining_processes.remove(next_process)
+    while current_time < runfor:
+        events.append((current_time,"idle"))
+        current_time +=1
     return events
 
+
 def round_robin_scheduler(processes, quantum, runfor):
-    current_time = 0
+    current_time = -1
     events = []
     remaining_processes = processes.copy()
     while remaining_processes:
         event = None
         for process in remaining_processes:
-            if process.arrival_time <= current_time:
-                process.start_time = current_time
-                event = process.name + " selected"
+            if process.arrival == current_time:
+                event = process.name + " arrived"
                 events.append((current_time,event))
-                process.response_time = current_time - process.arrival_time
-                if process.execution_time <= quantum:
-                    current_time += process.execution_time
+            if process.arrival <= current_time:
+                process.start_time = current_time
+                event = process.name + " selected (burst {})".format(process.burst)
+                events.append((current_time,event))
+                process.response_time = current_time - process.arrival
+                if process.burst <= quantum:
+                    current_time += process.burst
                     process.finish_time = current_time
                     event = process.name + " finished"
                     events.append((current_time,event))
-                    process.wait_time = process.start_time - process.arrival_time
+                    process.wait_time = process.start_time - process.arrival
+                    process.remaining_time = 0
                     remaining_processes.remove(process)
                 else:
                     current_time += quantum
-                    process.execution_time -= quantum
+                    process.burst -= quantum
             else:
                 current_time += 1
+    while current_time < runfor:
+        events.append((current_time,"idle"))
+        current_time +=1
     return events
 
-def write_results_to_file(filename,processcount, use, quantum, events, unfinished_processes, runfor):
+def write_results_to_file(processes,filename,processcount, use, quantum, events, unfinished_processes, runfor):
     with open(filename, "w") as file:
         file.write("Number of processes: {}\n".format(processcount))
         file.write("Algorithm used: {}\n".format(use))
@@ -94,6 +111,9 @@ def write_results_to_file(filename,processcount, use, quantum, events, unfinishe
         for event in events:
             file.write("Time {} {}\n".format(event[0], event[1]))
         file.write("Finished at: {}\n".format(runfor))
+        for process in processes:
+            turnaround = process.finish_time - process.start_time
+            file.write("{} wait {} turnaround {} response {}\n".format(process.name, process.wait_time, turnaround, process.response_time))
         if unfinished_processes:
             file.write("Unfinished processes: {}\n".format(", ".join(unfinished_processes)))
         else:
@@ -156,8 +176,8 @@ if __name__ == "__main__":
         print("Invalid algorithm specified.")
         sys.exit(1)
 
-    unfinished_processes = [process.name for process in processes if process.burst > 0]
+    unfinished_processes = [process.name for process in processes if process.remaining_time > 0]
 
-    write_results_to_file(output_file, processcount, use, quantum, events, unfinished_processes, runfor)
+    write_results_to_file(processes,output_file, processcount, use, quantum, events, unfinished_processes, runfor)
 
     print("Results written to output.out file.")
