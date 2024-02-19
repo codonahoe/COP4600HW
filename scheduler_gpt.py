@@ -9,6 +9,8 @@ class Process:
         self.arrival = arrival
         self.burst = burst
         self.status = "Waiting"  # Initially set status to "Waiting"
+        self.selection_time = None
+        self.completion_time = None
 
     def __str__(self):
         return f"Process {self.name}: Arrival={self.arrival}, Burst={self.burst}, Status={self.status}"
@@ -113,15 +115,10 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
         # human edit - removed wait and response time lists after switching to calculating wait/response/turnaround times in separate function
         arrived_processes = deque()  # Queue to store arrived processes
         selected_process = None
-        finished_processes = []
-        # human edit - added selection, completion time, sorted order, original burst value lists, and index tracker for future calculations
-        selection_times = []
-        completion_times = []
-        sorted_order = []
+        # human edit - added original burst and index to keep track of correct burst values for calculating times
         original_burst = []
         index = 0
         for process in processes:
-            sorted_order.append(process.name)
             original_burst.append(process.burst)
 
         output_file.write(f"{processcount} processes\n")
@@ -137,10 +134,9 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
             if selected_process:
                 if selected_process.burst == 1:
                     output_file.write(f"Time {current_time} : {selected_process.name} finished\n")
+                    # human edit - change process status and completion time
                     selected_process.status = "Finished"
-                    finished_processes.append(selected_process)
-                    # human edit - add to completion times list
-                    completion_times.append((selected_process.name, current_time))
+                    selected_process.completion_time = current_time
                     selected_process = None
                 else:
                     selected_process.burst -= 1
@@ -150,29 +146,22 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
                 if arrived_processes:
                     selected_process = arrived_processes.popleft()
                     output_file.write(f"Time {current_time} : {selected_process.name} selected (burst {selected_process.burst})\n")
-                    selected_process.status = "Running"
-                    # human edit - add to selection times list
-                    selection_times.append((selected_process.name, current_time))
+                    selected_process.status = "Selected"
+                    selected_process.selection_time = current_time  # human edit - update selection time
                 elif selected_process is None:
                     output_file.write(f"Time {current_time} : Idle\n")
 
             current_time += 1
 
         output_file.write(f"Finished at time {runfor}\n\n") # human edit - added a second newline for formatting purposes
-
-        # human edit - re-sort selection and completion times into order that will match corresponding arrival and burst times
-        selection_times = [tuple for x in sorted_order for tuple in selection_times if tuple[0] == x]
-        completion_times = [tuple for x in sorted_order for tuple in completion_times if tuple[0] == x]
         
         for process in processes:
-            if process not in finished_processes:
-                output_file.write(f"{process.name} did not finish\n")
-                index += 1
-            # human edit - used a separate, reusable function to calculate wait, turnaround and response times
+            if process.status == "Finished":
+                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[index], process.selection_time, process.completion_time)
+                output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time}\n")
             else:
-                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[index], selection_times[index][1], completion_times[index][1])
-                output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time} \n")
-                index += 1
+                output_file.write(f"{process.name} did not finish\n")
+            index += 1 # human edit - increment index to traverse array of burst times
 
 def sjf_scheduler(processcount, runfor, processes):
     output_filename = sys.argv[1].replace('.in', '.out')
