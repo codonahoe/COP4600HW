@@ -8,6 +8,10 @@ class Process:
         self.name = name
         self.arrival = arrival
         self.burst = burst
+        self.status = "Waiting"  # Initially set status to "Waiting"
+
+    def __str__(self):
+        return f"Process {self.name}: Arrival={self.arrival}, Burst={self.burst}, Status={self.status}"
 
 class Parameters:
     def __init__(self, processcount, runfor, use, quantum, processes):
@@ -122,7 +126,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
 
         output_file.write(f"{processcount} processes\n")
         output_file.write("Using First-Come First-Served\n")
-        while current_time < runfor or selected_process is not None or arrived_processes:
+        while current_time < runfor: # human edit - got rid of extra conditions leading to error
             # Check for arrived processes
             for process in processes:
                 if process.arrival == current_time and process not in arrived_processes and process != selected_process:
@@ -133,6 +137,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
             if selected_process:
                 if selected_process.burst == 1:
                     output_file.write(f"Time {current_time} : {selected_process.name} finished\n")
+                    selected_process.status = "Finished"
                     finished_processes.append(selected_process)
                     # human edit - add to completion times list
                     completion_times.append((selected_process.name, current_time))
@@ -145,6 +150,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
                 if arrived_processes:
                     selected_process = arrived_processes.popleft()
                     output_file.write(f"Time {current_time} : {selected_process.name} selected (burst {selected_process.burst})\n")
+                    selected_process.status = "Running"
                     # human edit - add to selection times list
                     selection_times.append((selected_process.name, current_time))
                 elif selected_process is None:
@@ -203,6 +209,7 @@ def sjf_scheduler(processcount, runfor, processes):
             for x in range (len(completion_times)):
                 if completion_times[x][1] == current_time:
                     output_file.write(f"Time {current_time} : {processes[completion_times[x][0]].name} finished\n")
+                    processes[shortest_process].status = "Finished" # human edit - added status update
 
             if shortest_process is None:
                 output_file.write(f"Time {current_time} : Idle\n")
@@ -213,6 +220,7 @@ def sjf_scheduler(processcount, runfor, processes):
             if selections == [] or shortest_process != selections[len(selections)-1]:
                 selections.append(shortest_process)
                 output_file.write(f"Time {current_time} : {processes[shortest_process].name} selected (burst {processes[shortest_process].burst})\n")
+                processes[shortest_process].status = "Running" # human edit - added status update
             
             if shortest_process not in [x[0] for x in selection_times]:
                 selection_times.append((shortest_process, current_time))
@@ -280,12 +288,14 @@ def rr_scheduler(processcount, runfor, quantum, processes):
                 running_process.burst -= 1
                 if running_process.burst == 0:
                     output_file.write(f"Time {current_time} : {running_process.name} finished\n")
+                    running_process.status = "Finished" # human edit - added status update
                     completion_times.append((running_process.name, current_time))
                     quantum_counter = 0
                     # Check if there is a process waiting in the queue
                     if process_queue:
                         next_process = process_queue.popleft()
                         output_file.write(f"Time {current_time} : {next_process.name} selected (burst {next_process.burst})\n")
+                        next_process.status = "Running"
                         # Add to selection times if not already selected
                         if next_process.name not in [x[0] for x in selection_times]:
                             selection_times.append((next_process.name, current_time))
@@ -299,6 +309,7 @@ def rr_scheduler(processcount, runfor, quantum, processes):
                 if process_queue:
                     next_process = process_queue.popleft()
                     output_file.write(f"Time {current_time} : {next_process.name} selected (burst {next_process.burst})\n")
+                    next_process.status = "Running"
                     # Add to selection times if not already selected
                     if next_process.name not in [x[0] for x in selection_times]:
                         selection_times.append((next_process.name, current_time))
@@ -313,6 +324,7 @@ def rr_scheduler(processcount, runfor, quantum, processes):
                 else:
                     if running_process:
                         output_file.write(f"Time {current_time} : {running_process.name} selected (burst {running_process.burst})\n")
+                        running_process.status = "Running"
                         # human edit - add this selection to selection_times if applicable
                         if running_process.name not in [x[0] for x in selection_times]:
                             selection_times.append((running_process.name, current_time))
