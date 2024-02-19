@@ -127,16 +127,18 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
             # Check for arrived processes
             for process in processes:
                 if process.arrival == current_time and process not in arrived_processes and process != selected_process:
-                    arrived_processes.append(process)
-                    output_file.write(f"Time {current_time} : {process.name} arrived\n")
+                    if current_time < runfor:
+                        arrived_processes.append(process)
+                        output_file.write(f"Time {current_time} : {process.name} arrived\n")
 
             # Execute current process
             if selected_process:
                 if selected_process.burst == 1:
-                    output_file.write(f"Time {current_time} : {selected_process.name} finished\n")
-                    finished_processes.append(selected_process)
-                    selected_process.status = "Completed"
-                    # human edit - add to completion times list
+                    if current_time < runfor:
+                        output_file.write(f"Time {current_time} : {selected_process.name} finished\n")
+                        finished_processes.append(selected_process)
+                        selected_process.status = "Completed"
+                        # human edit - add to completion times list
                     completion_times.append((selected_process.name, current_time))
                     selected_process = None
                 else:
@@ -146,11 +148,12 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
             if selected_process is None or selected_process.burst == 0:
                 if arrived_processes:
                     selected_process = arrived_processes.popleft()
-                    output_file.write(f"Time {current_time} : {selected_process.name} selected (burst {selected_process.burst})\n")
-                    selected_process.status = "Running"
+                    if current_time < runfor:
+                        output_file.write(f"Time {current_time} : {selected_process.name} selected (burst {selected_process.burst})\n")
+                        selected_process.status = "Running"
                     # human edit - add to selection times list
                     selection_times.append((selected_process.name, current_time))
-                elif selected_process is None:
+                elif selected_process is None and current_time < runfor:
                     output_file.write(f"Time {current_time} : Idle\n")
 
             current_time += 1
