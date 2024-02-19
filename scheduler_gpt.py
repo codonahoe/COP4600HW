@@ -166,17 +166,14 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
 def sjf_scheduler(processcount, runfor, processes):
     output_filename = sys.argv[1].replace('.in', '.out')
 
-    # Initialize sorted_order list to keep track of original order of processes
-    sorted_order = [process.name for process in processes]
-
     with open(output_filename, 'w') as output_file:
         output_file.write(f"{processcount} processes\n")
         output_file.write("Using preemptive Shortest Job First\n")
         
         current_time = 0
-        selection_times = []
-        completion_times = []
+        # human edit - got rid of selection times/completion times lists, added index to traverse original_burst
         original_burst = [process.burst for process in processes]
+        index = 0
         # human edit - added selections list to keep track of all selections
         selections = []
         
@@ -195,10 +192,9 @@ def sjf_scheduler(processcount, runfor, processes):
                     output_file.write(f"Time {current_time} : {process.name} arrived\n")
 
             # human edit - check for process completions
-            for x in range (len(completion_times)):
-                if completion_times[x][1] == current_time:
-                    output_file.write(f"Time {current_time} : {processes[completion_times[x][0]].name} finished\n")
-                    processes[shortest_process].status = "Finished" # human edit - added status update
+            for process in processes:
+                if process.completion_time == current_time:
+                    output_file.write(f"Time {current_time} : {process.completion_time} finished\n")
 
             if shortest_process is None:
                 output_file.write(f"Time {current_time} : Idle\n")
@@ -209,32 +205,30 @@ def sjf_scheduler(processcount, runfor, processes):
             if selections == [] or shortest_process != selections[len(selections)-1]:
                 selections.append(shortest_process)
                 output_file.write(f"Time {current_time} : {processes[shortest_process].name} selected (burst {processes[shortest_process].burst})\n")
-                processes[shortest_process].status = "Running" # human edit - added status update
-            
-            if shortest_process not in [x[0] for x in selection_times]:
-                selection_times.append((shortest_process, current_time))
+                # human edit - added status update and selection time
+                processes[shortest_process].status = "Running"
+
+            if processes[shortest_process].selection_time == None:
+                processes[shortest_process].selection_time = current_time
 
             processes[shortest_process].burst -= 1
 
             # human edit - fixed issue with incorrect completion times
-            if processes[shortest_process].burst == 0 and shortest_process not in [x[0] for x in completion_times]:
-                completion_times.append((shortest_process, current_time+1))
+            if processes[shortest_process].burst == 0:
+                processes[shortest_process].completion_time = current_time+1
+                processes[shortest_process].status = "Finished"
 
             current_time += 1
 
         output_file.write(f"Finished at time {runfor}\n\n") # human edit - added extra newline for formatting purposes
 
-        # Sort selection_times and completion_times according to sorted_order
-        selection_times.sort(key=lambda x: sorted_order.index(processes[x[0]].name))
-        completion_times.sort(key=lambda x: sorted_order.index(processes[x[0]].name))
-
-        for i, process in enumerate(processes):
-            if i not in [x[0] for x in completion_times]:
-                output_file.write(f"{process.name} did not finish\n")
-            else:
-                # human edit - fixed selection_times index
-                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[i], selection_times[i][1], completion_times[i][1])
+        for process in processes:
+            if process.status == "Finished":
+                wait_time, turnaround_time, response_time = calculate_times(process.arrival, original_burst[index], process.selection_time, process.completion_time)
                 output_file.write(f"{process.name} wait {wait_time} turnaround {turnaround_time} response {response_time}\n")
+            else:
+                output_file.write(f"{process.name} did not finish\n")
+            index += 1 # human edit - increment index to traverse array of burst times
 
 def rr_scheduler(processcount, runfor, quantum, processes):
     output_filename = sys.argv[1].replace('.in', '.out')
