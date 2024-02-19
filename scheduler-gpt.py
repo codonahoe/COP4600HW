@@ -123,7 +123,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
 
         output_file.write(f"{processcount} processes\n")
         output_file.write("Using First-Come First-Served\n")
-        while current_time < runfor or selected_process is not None or arrived_processes:
+        while current_time < runfor and selected_process is not None or arrived_processes:
             # Check for arrived processes
             for process in processes:
                 if process.arrival == current_time and process not in arrived_processes and process != selected_process:
@@ -163,6 +163,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
         
         for process in processes:
             if process not in finished_processes:
+                process.status = "Unfinished"
                 output_file.write(f"{process.name} did not finish\n")
                 index += 1
             # human edit - used a separate, reusable function to calculate wait, turnaround and response times
@@ -238,6 +239,7 @@ def sjf_scheduler(processcount, runfor, processes):
 
         for i, process in enumerate(processes):
             if i not in [x[0] for x in completion_times]:
+                process.status = "Unfinished"
                 output_file.write(f"{process.name} did not finish\n")
             else:
                 # human edit - fixed selection_times index
@@ -345,6 +347,7 @@ def rr_scheduler(processcount, runfor, quantum, processes):
         # Check if any process did not finish
         for process in process_names:
             if process not in [x[0] for x in completion_times]:
+                process.status = "Unfinished"
                 output_file.write(f"{process} did not finish\n")
 
         # Calculate wait, turnaround, and response times
