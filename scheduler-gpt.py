@@ -123,7 +123,7 @@ def fifo_scheduler(runfor, processes, processcount): #human edit - added process
 
         output_file.write(f"{processcount} processes\n")
         output_file.write("Using First-Come First-Served\n")
-        while current_time < runfor and selected_process is not None or arrived_processes:
+        while current_time < runfor or selected_process is not None or arrived_processes:
             # Check for arrived processes
             for process in processes:
                 if process.arrival == current_time and process not in arrived_processes and process != selected_process:
