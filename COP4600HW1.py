@@ -37,13 +37,11 @@ def sjf_scheduler(processes):
 def round_robin_scheduler(processes, quantum):
     current_time = 0
     while processes:
-        # Track whether any process has been scheduled in this iteration
         scheduled = False
         for process in processes:
             if process.arrival_time <= current_time and process.status != "completed":
                 process.status = "running"
                 process.start_time = current_time
-                # If the process has remaining time greater than quantum
                 if process.remaining_time > quantum:
                     current_time += quantum
                     process.remaining_time -= quantum
@@ -51,14 +49,21 @@ def round_robin_scheduler(processes, quantum):
                     # If the process finishes within this quantum
                     current_time += process.remaining_time
                     process.remaining_time = 0
-                # Update the end time and status of the process
                 process.end_time = current_time
                 process.status = "completed"
-                # Set scheduled flag to indicate a process was scheduled
                 scheduled = True
         # If no process was scheduled in this iteration, move time forward
         if not scheduled:
-            current_time += 1
+            # Check if there are any pending processes left
+            pending_processes = [p for p in processes if p.status != "completed"]
+            if not pending_processes:
+                break  # No pending processes left, exit the loop
+            # Find the earliest arrival time among pending processes
+            next_arrival = min(p.arrival_time for p in pending_processes)
+            # Advance time to the next arrival time
+            current_time = next_arrival
+
+
 
 def calculate_metrics(processes):
     for process in processes:
