@@ -1,3 +1,4 @@
+/*OSTEP's sample code*/
 #ifndef __common_threads_h__
 #define __common_threads_h__
 
