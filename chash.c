@@ -7,7 +7,7 @@
 #define MAX_COMMAND_LEN 100
 #define MAX_NAME_LEN 50
 
-void parse_command(char *command, char *param1, char *param2);
+void parse_command(char *line, char *command, char *param1, char *param2);
 void execute_command(char *command, char *param1, char *param2);
 
 int main() {
@@ -15,37 +15,30 @@ int main() {
     init_hash_table();
     init_rwlock();
 
-    // Hardcoded array of commands
-    char *commands[] = {
-        "threads,11,0",
-        "insert,Richard Garriot,40000",
-        "insert,Sid Meier,50000",
-        "insert,Shigeru Miyamoto,51000",
-        "insert,Hideo Kojima,45000",
-        "insert,Gabe Newell,49000",
-        "insert,Roberta Williams,45900",
-        "insert,Carol Shaw,41000",
-        "print,0,0",
-        "search,Shigeru Miyamoto,0",
-        "delete,Sid Meier,0",
-        "print,0,0"
-    };
+    // Open the commands file
+    FILE *file = fopen("commands.txt", "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file.\n");
+        return 1;
+    }
 
-    // Process each command in the array
-    for (int i = 0; i < sizeof(commands) / sizeof(commands[0]); i++) {
+    char line[MAX_COMMAND_LEN];
+
+    // Read and process each command from the file
+    while (fgets(line, sizeof(line), file) != NULL) {
         char command[MAX_COMMAND_LEN];
         char param1[MAX_NAME_LEN];
         char param2[MAX_NAME_LEN];
 
-        // Copy the current command to process
-        strcpy(command, commands[i]);
-
         // Parse the command and parameters
-        parse_command(command, param1, param2);
+        parse_command(line, command, param1, param2);
 
         // Execute the command
         execute_command(command, param1, param2);
     }
+
+    // Close the file
+    fclose(file);
 
     // Print summary information to console
     printf("Number of lock acquisitions: %d\n", get_num_lock_acquisitions());
@@ -62,9 +55,9 @@ int main() {
     return 0;
 }
 
-void parse_command(char *command, char *param1, char *param2) {
+void parse_command(char *line, char *command, char *param1, char *param2) {
     // Extract command and parameters from the input string
-    sscanf(command, "%[^,],%[^,],%s", param1, param2);
+    sscanf(line, "%[^,],%[^,],%s", command, param1, param2);
 }
 
 void execute_command(char *command, char *param1, char *param2) {
@@ -78,8 +71,7 @@ void execute_command(char *command, char *param1, char *param2) {
         // Handle delete command
         // Not implemented in this basic outline
     } else if (strcmp(command, "search") == 0) {
-        // Handle search command
-        // Not implemented in this basic outline
+        search_record(param1);
     } else if (strcmp(command, "print") == 0) {
         // Handle print command
         // Not implemented in this basic outline
