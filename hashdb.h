@@ -12,7 +12,6 @@ typedef struct hash_struct
     struct hash_struct *next; // pointer to the next node in the list
 } hashRecord;
 
-void init_hash_table();
 hashRecord *search_record(const char *name);
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length);
 
