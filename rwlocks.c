@@ -5,20 +5,11 @@
 
 #include "common.h"
 #include "common_threads.h"
+#include "rwlocks.h"
 #include <semaphore.h>
 
 
-typedef struct _rwlock_t {
-    sem_t writelock;
-    sem_t lock;
-    int readers;
-} rwlock_t;
 
-void rwlock_init(rwlock_t *lock) {
-    lock->readers = 0;
-    Sem_init(&lock->lock, 1); 
-    Sem_init(&lock->writelock, 1); 
-}
 
 void rwlock_acquire_readlock(rwlock_t *lock) {
     Sem_wait(&lock->lock);
@@ -49,6 +40,18 @@ int write_loops;
 int counter = 0;
 
 rwlock_t mutex;
+
+typedef struct _rwlock_t {
+    sem_t writelock;
+    sem_t lock;
+    int readers;
+} rwlock_t;
+
+void rwlock_init(rwlock_t *lock) {
+    lock->readers = 0;
+    Sem_init(&lock->lock, 1); 
+    Sem_init(&lock->writelock, 1); 
+}
 
 void *reader(void *arg) {
     int i;

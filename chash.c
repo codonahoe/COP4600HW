@@ -11,11 +11,7 @@ void parse_command(char *line, char *command, char *param1, char *param2);
 void execute_command(char *command, char *param1, char *param2);
 
 int main() {
-    // Initialize the concurrent hash table and locks
-    init_hash_table();
-    init_rwlock();
 
-    // Open the commands file
     FILE *file = fopen("commands.txt", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file.\n");
@@ -39,18 +35,6 @@ int main() {
 
     // Close the file
     fclose(file);
-
-    // Print summary information to console
-    printf("Number of lock acquisitions: %d\n", get_num_lock_acquisitions());
-    printf("Number of lock releases: %d\n", get_num_lock_releases());
-
-    // Print final table contents to console
-    printf("Final Table:\n");
-    print_hash_table();
-
-    // Clean up resources
-    destroy_hash_table();
-    destroy_rwlock();
 
     return 0;
 }
