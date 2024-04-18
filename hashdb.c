@@ -38,6 +38,7 @@ hashRecord *search_record(const char *name) {
     uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
 
     // Acquire the read lock
+    rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
     printf("Aquiring Read Lock");
 
@@ -54,7 +55,7 @@ hashRecord *search_record(const char *name) {
 
     // Release the read lock and return NULL if record not found
     rwlock_release_readlock(&hash_table_lock);
-     printf("Releasing Read Lock");
+    printf("Releasing Read Lock");
     return NULL;
 }
 
