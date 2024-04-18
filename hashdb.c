@@ -3,13 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdio.h>
 // Define the size of the hash table
 #define HASH_TABLE_SIZE 100
 static hashRecord *hash_table[HASH_TABLE_SIZE];
 static pthread_rwlock_t hash_table_lock;
 
 /*
-Concurrent Hash Table implementation: including your Jenkins function and all linked list operations
+Concurrent Hash Table implementation: including Jenkins function and all linked list operations
 */
 
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
@@ -26,6 +27,11 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   return hash;
 }
 
+// Get total count of threads
+int thread_count(const char *number)
+{
+    return atoi(number);
+}
 
 hashRecord *search_record(const char *name) {
     // Compute the hash value for the name
@@ -48,4 +54,25 @@ hashRecord *search_record(const char *name) {
     // Release the read lock and return NULL if record not found
     pthread_rwlock_unlock(&hash_table_lock);
     return NULL;
+}
+
+// Print a single record
+void print_element(hashRecord *element)
+{
+    // Print hash value, name, and salary
+    printf("%d,", element->hash);
+    printf("%s,", element->name);
+    printf("%d\n", element->salary);
+}
+
+// Print the current list
+void print_all(hashRecord *head)
+{
+    hashRecord *current = head;
+    // Use single record print for each record
+    while (current != NULL)
+    {
+        print_element(current);
+        current = current->next;
+    }
 }

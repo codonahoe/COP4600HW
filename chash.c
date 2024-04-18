@@ -9,6 +9,7 @@
 
 void parse_command(char *line, char *command, char *param1, char *param2);
 void execute_command(char *command, char *param1, char *param2);
+//void execute_command(char *command, char *param1, char *param2, FILE *output_file);
 
 int main() {
 
@@ -17,6 +18,8 @@ int main() {
         fprintf(stderr, "Error opening file.\n");
         return 1;
     }
+    // Create output file
+    // FILE *output_file = fopen("output.txt", "w");   
 
     char line[MAX_COMMAND_LEN];
 
@@ -31,10 +34,13 @@ int main() {
 
         // Execute the command
         execute_command(command, param1, param2);
+        //execute_command(command, param1, param2, output_file);
     }
 
     // Close the file
     fclose(file);
+    // Close output file
+    // fclose(output_file);
 
     return 0;
 }
@@ -45,9 +51,11 @@ void parse_command(char *line, char *command, char *param1, char *param2) {
 }
 
 void execute_command(char *command, char *param1, char *param2) {
+//void execute_command(char *command, char *param1, char *param2, FILE *output_file) {
     if (strcmp(command, "threads") == 0) {
-        // Handle threads command
-        // Not implemented in this basic outline
+        int threads = thread_count(param1);
+        printf("Running %d threads\n", threads);
+        //fprintf(output_file, "Running %d threads\n", threads);
     } else if (strcmp(command, "insert") == 0) {
         // Handle insert command
         // Not implemented in this basic outline
@@ -57,8 +65,8 @@ void execute_command(char *command, char *param1, char *param2) {
     } else if (strcmp(command, "search") == 0) {
         search_record(param1);
     } else if (strcmp(command, "print") == 0) {
-        // Handle print command
-        // Not implemented in this basic outline
+        // Needs existing linked list to work
+        // print_all(head);
     } else {
         // Invalid command
         printf("Invalid command: %s\n", command);
