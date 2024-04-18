@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = -lpthread
 
 # Source files
-SRCS = main.c hashdb.c rwlocks.c
+SRCS = chash.c hashdb.c rwlocks.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -21,12 +21,12 @@ all: $(TARGET)
 
 # Compile source files to object files
 %.o: %.c
-    $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link object files to create executable
 $(TARGET): $(OBJS)
-    $(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 # Clean up
 clean:
-    rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET)
