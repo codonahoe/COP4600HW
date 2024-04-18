@@ -8,9 +8,6 @@
 #include "rwlocks.h"
 #include <semaphore.h>
 
-
-
-
 void rwlock_acquire_readlock(rwlock_t *lock) {
     Sem_wait(&lock->lock);
     lock->readers++;
@@ -41,19 +38,13 @@ int counter = 0;
 
 rwlock_t mutex;
 
-typedef struct _rwlock_t {
-    sem_t writelock;
-    sem_t lock;
-    int readers;
-} rwlock_t;
-
 void rwlock_init(rwlock_t *lock) {
     lock->readers = 0;
     Sem_init(&lock->lock, 1); 
     Sem_init(&lock->writelock, 1); 
 }
 
-void *reader(void *arg) {
+void *reader() {
     int i;
     int local = 0;
     for (i = 0; i < read_loops; i++) {
@@ -66,7 +57,7 @@ void *reader(void *arg) {
     return NULL;
 }
 
-void *writer(void *arg) {
+void *writer() {
     int i;
     for (i = 0; i < write_loops; i++) {
 	rwlock_acquire_writelock(&mutex);
@@ -75,22 +66,4 @@ void *writer(void *arg) {
     }
     printf("write done\n");
     return NULL;
-}
-
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
-	fprintf(stderr, "usage: rwlock readloops writeloops\n");
-	exit(1);
-    }
-    read_loops = atoi(argv[1]);
-    write_loops = atoi(argv[2]);
-    
-    rwlock_init(&mutex); 
-    pthread_t c1, c2;
-    Pthread_create(&c1, NULL, reader, NULL);
-    Pthread_create(&c2, NULL, writer, NULL);
-    Pthread_join(c1, NULL);
-    Pthread_join(c2, NULL);
-    printf("all done\n");
-    return 0;
 }

@@ -7,7 +7,7 @@
 // Define the size of the hash table
 #define HASH_TABLE_SIZE 100
 static hashRecord *hash_table[HASH_TABLE_SIZE];
-static pthread_rwlock_t hash_table_lock;
+static rwlock_t hash_table_lock;
 
 /*
 Concurrent Hash Table implementation: including Jenkins function and all linked list operations
@@ -38,21 +38,21 @@ hashRecord *search_record(const char *name) {
     uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
 
     // Acquire the read lock
-    pthread_rwlock_rdlock(&hash_table_lock);
+    rwlock_acquire_readlock(&hash_table_lock);
 
     // Search for the record in the hash table
     hashRecord *current = hash_table[hash_value % HASH_TABLE_SIZE];
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             // Release the read lock and return the record
-            pthread_rwlock_unlock(&hash_table_lock);
+            rwlock_release_readlock(&hash_table_lock);
             return current;
         }
         current = current->next;
     }
 
     // Release the read lock and return NULL if record not found
-    pthread_rwlock_unlock(&hash_table_lock);
+    rwlock_release_readlock(&hash_table_lock);
     return NULL;
 }
 
