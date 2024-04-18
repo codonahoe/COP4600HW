@@ -39,6 +39,7 @@ hashRecord *search_record(const char *name) {
 
     // Acquire the read lock
     rwlock_acquire_readlock(&hash_table_lock);
+    printf("Aquiring Read Lock");
 
     // Search for the record in the hash table
     hashRecord *current = hash_table[hash_value % HASH_TABLE_SIZE];
@@ -53,6 +54,7 @@ hashRecord *search_record(const char *name) {
 
     // Release the read lock and return NULL if record not found
     rwlock_release_readlock(&hash_table_lock);
+     printf("Releasing Read Lock");
     return NULL;
 }
 
