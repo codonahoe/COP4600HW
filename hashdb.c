@@ -60,10 +60,8 @@ hashRecord *search_record(const char *name) {
 }
 
 void insert_record(const char *name, int salary) {
-    // Compute the hash value for the name
     uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
 
-    // Acquire the write lock
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
 
@@ -98,7 +96,38 @@ void insert_record(const char *name, int salary) {
         }
         current->next = new_record;
     }
-    // Release the write lock
+    rwlock_release_writelock(&hash_table_lock);
+}
+
+void delete_record(const char *name) {
+    rwlock_init(&hash_table_lock);
+    rwlock_acquire_writelock(&hash_table_lock);
+
+    // Search for the record to delete
+    hashRecord *record_to_delete = search_record(name);
+    if (record_to_delete == NULL) { // Record not found, release the write lock and return
+        rwlock_release_writelock(&hash_table_lock);
+        return;
+    }
+
+    uint32_t hash_value = record_to_delete->hash;
+    int index = hash_value % HASH_TABLE_SIZE;
+
+    // Search again to find the previous record in the list
+    hashRecord *current = hash_table[index];
+    hashRecord *prev = NULL;
+    while (current != NULL && current != record_to_delete) {
+        prev = current;
+        current = current->next;
+    }
+
+    // Remove the record from the list
+    if (prev == NULL) { // The record to delete is the first in the list
+        hash_table[index] = record_to_delete->next;
+    } else {
+        prev->next = record_to_delete->next;
+    }
+    free(record_to_delete);
     rwlock_release_writelock(&hash_table_lock);
 }
 
