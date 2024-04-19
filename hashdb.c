@@ -83,12 +83,22 @@ void insert_record(const char *name, int salary) {
     if (hash_table[index] == NULL) {
         hash_table[index] = new_record;
     } else {
-        // Append the new record to the end of the linked list
         hashRecord *current = hash_table[index];
-        while (current->next != NULL) {
+        //check if name exists
+        while (current != NULL) {
+            if (strcmp(current->name, name) == 0) {
+                //Exists so update the salary
+                current->salary = salary;
+                break;
+            }
+            //else does not exist & we need to append to end of list
+            if (current->next == NULL) {
+                // Name not found, append the new record
+                current->next = new_record;
+                break;
+            }
             current = current->next;
         }
-        current->next = new_record;
     }
 
     // Release the write lock
