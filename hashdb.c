@@ -56,9 +56,9 @@ hashRecord *search_record(const char *name, FILE *output_file) {
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             // Release the read lock and return the record
-            rwlock_release_readlock(&hash_table_lock);
             printf("READ LOCK RELEASED\n");
             fprintf(output_file, "READ LOCK RELEASED\n");
+            rwlock_release_readlock(&hash_table_lock);
             printf("%lu,%s,%u\n", (unsigned long)current->hash, current->name, current->salary);
             fprintf(output_file, "%lu,%s,%u\n", (unsigned long)current->hash, current->name, current->salary);
             release_count++;
@@ -68,9 +68,9 @@ hashRecord *search_record(const char *name, FILE *output_file) {
     }
 
     // Release the read lock and return NULL if record not found
-    rwlock_release_readlock(&hash_table_lock);
     printf("READ LOCK RELEASED\n");
     fprintf(output_file, "READ LOCK RELEASED\n");
+    rwlock_release_readlock(&hash_table_lock);
     release_count++;
     return NULL;
 }
@@ -100,9 +100,9 @@ void insert_record(const char *name, int salary, FILE *output_file) {
     // Create a new record
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
     if (new_record == NULL) { ///cant allocate memory
-        rwlock_release_writelock(&hash_table_lock);
         printf("WRITE LOCK RELEASED\n");
         fprintf(output_file, "WRITE LOCK RELEASED\n");
+        rwlock_release_writelock(&hash_table_lock);
         release_count++;
         return;
     }
@@ -123,9 +123,9 @@ void insert_record(const char *name, int salary, FILE *output_file) {
         }
         current->next = new_record;
     }
-    rwlock_release_writelock(&hash_table_lock);
     printf("WRITE LOCK RELEASED\n");
     fprintf(output_file, "WRITE LOCK RELEASED\n");
+    rwlock_release_writelock(&hash_table_lock);
     release_count++;
 }
 
@@ -164,9 +164,9 @@ void delete_record(const char *name, FILE *output_file) {
         prev->next = record_to_delete->next;
     }
     free(record_to_delete);
-    rwlock_release_writelock(&hash_table_lock);
     printf("WRITE LOCK RELEASED\n");
     fprintf(output_file, "WRITE LOCK RELEASED\n");
+    rwlock_release_writelock(&hash_table_lock);
     release_count++;
 }
 
@@ -243,9 +243,9 @@ void print_all(FILE *output_file)
     {
         print_element(sort[i], output_file);
     }
-    rwlock_release_readlock(&hash_table_lock);
     printf("READ LOCK RELEASED\n");
     fprintf(output_file, "READ LOCK RELEASED\n");
+    rwlock_release_readlock(&hash_table_lock);
     release_count++;
 }
 
