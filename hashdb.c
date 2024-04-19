@@ -59,6 +59,42 @@ hashRecord *search_record(const char *name) {
     return NULL;
 }
 
+void insert_record(const char *name, int salary) {
+    // Compute the hash value for the name
+    uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
+
+    // Acquire the write lock
+    rwlock_init(&hash_table_lock);
+    rwlock_acquire_writelock(&hash_table_lock);
+
+    // Create a new record
+    hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
+    if (new_record == NULL) {
+        rwlock_release_writelock(&hash_table_lock);
+        return;
+    }
+    new_record->hash = hash_value;
+    strncpy(new_record->name, name, 50);
+    new_record->salary = salary;
+    new_record->next = NULL;
+
+    // Insert the record into the hash table
+    int index = hash_value % HASH_TABLE_SIZE;
+    if (hash_table[index] == NULL) {
+        hash_table[index] = new_record;
+    } else {
+        // Append the new record to the end of the linked list
+        hashRecord *current = hash_table[index];
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_record;
+    }
+
+    // Release the write lock
+    rwlock_release_writelock(&hash_table_lock);
+}
+
 // Print a single record
 void print_element(hashRecord *element)
 {
