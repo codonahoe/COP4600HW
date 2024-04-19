@@ -152,20 +152,12 @@ void delete_record(const char *name) {
 }
 
 // Print a single record
-void print_element(hashRecord* element)
+void print_element(hashRecord element)
 {
     // Print hash value, name, and salary
-    printf("%u,", element->hash);
-    printf("%s,", element->name);
-    printf("%d\n", element->salary);
-}
-
-// Helper for sorting algorithm
-void swap(hashRecord* a, hashRecord* b)
-{
-    hashRecord temp = *a;
-    *a = *b;
-    *b = temp;
+    printf("%u,", element.hash);
+    printf("%s,", element.name);
+    printf("%d\n", element.salary);
 }
 
 // Print current records in sorted order
@@ -174,14 +166,17 @@ void print_all()
     rwlock_acquire_readlock(&hash_table_lock);
     printf("ACQUIRING READ LOCK\n");
     acquisition_count++;
-    hashRecord* sort[HASH_TABLE_SIZE];
+    hashRecord sort[HASH_TABLE_SIZE];
     int index = 0;
     // Grab elements of hash table that aren't null
     for (int i = 0; i < HASH_TABLE_SIZE; i++)
     {
         if (hash_table[i])
         {
-            sort[index] = hash_table[i];
+            sort[index].hash = hash_table[i]->hash;
+            strcpy(sort[index].name, hash_table[i]->name);
+            sort[index].salary = hash_table[i]->salary;
+            sort[index].next = hash_table[i]->next;
             index++;
         }
     }
@@ -194,14 +189,29 @@ void print_all()
             k = i;
             for (int j = i+1; j < index; j++)
             {
-                if (sort[j]->hash < sort[k]->hash)
+                if (sort[j].hash < sort[k].hash)
                 {
                     k = j;
                 }
             }
             if (k != i)
             {
-                swap(sort[k], sort[i]);
+                hashRecord temp;
+                // temp = a
+                temp.hash = sort[k].hash;
+                strcpy(temp.name, sort[k].name);
+                temp.salary = sort[k].salary;
+                temp.next = sort[k].next;
+                // a = b
+                sort[k].hash = sort[i].hash;
+                strcpy(sort[k].name, sort[i].name);
+                sort[k].salary = sort[i].salary;
+                sort[k].next = sort[i].next;
+                // b = temp
+                sort[i].hash = temp.hash;
+                strcpy(sort[i].name, temp.name);
+                sort[i].salary = temp.salary;
+                sort[i].next = temp.next;
             }
         }
     }
