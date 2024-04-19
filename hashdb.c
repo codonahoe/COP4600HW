@@ -46,8 +46,8 @@ hashRecord *search_record(const char *name, FILE *output_file) {
     // Acquire the read lock
     rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
-    printf("READ LOCK ACQUIRED\n");
-    fprintf(output_file, "READ LOCK ACQUIRED\n");
+    /*printf("READ LOCK ACQUIRED\n");
+    fprintf(output_file, "READ LOCK ACQUIRED\n");*/
     acquisition_count++;
 
     // Search for the record in the hash table
@@ -87,7 +87,7 @@ void insert_record(const char *name, int salary, FILE *output_file) {
     acquisition_count++;
 
     // Search for the record in the hash table
-    hashRecord *existing_record = search_record(name, output_file);
+    /*hashRecord *existing_record = search_record(name, output_file);
     if (existing_record != NULL) { // Record with the same name already exists, update its salary
         existing_record->salary = salary;
         rwlock_release_writelock(&hash_table_lock);
@@ -95,9 +95,9 @@ void insert_record(const char *name, int salary, FILE *output_file) {
         fprintf(output_file, "WRITE LOCK RELEASED\n");
         release_count++;
         return;
-    }
+    }*/
 
-    // Else we must create a new record
+    // Create a new record
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
     if (new_record == NULL) { ///cant allocate memory
         rwlock_release_writelock(&hash_table_lock);
@@ -134,20 +134,19 @@ void delete_record(const char *name, FILE *output_file) {
     printf("DELETE,%s\n", name);
     fprintf(output_file, "DELETE,%s\n", name);
     rwlock_init(&hash_table_lock);
+    // Print statement here, not inside search function, to match example output
+    printf("READ LOCK ACQUIRED\n");
+    fprintf(output_file, "READ LOCK ACQUIRED\n");
+    // Search for the record to delete
+    hashRecord *record_to_delete = search_record(name, output_file);
+    if (record_to_delete == NULL) { // Record not found
+        return;
+    }
+
     rwlock_acquire_writelock(&hash_table_lock);
     printf("WRITE LOCK ACQUIRED\n");
     fprintf(output_file, "WRITE LOCK ACQUIRED\n");
     acquisition_count++;
-    // Search for the record to delete
-    hashRecord *record_to_delete = search_record(name, output_file);
-    if (record_to_delete == NULL) { // Record not found, release the write lock and return
-        rwlock_release_writelock(&hash_table_lock);
-        printf("WRITE LOCK RELEASED\n");
-        fprintf(output_file, "WRITE LOCK RELEASED\n");
-        release_count++;
-        return;
-    }
-
     uint32_t hash_value = record_to_delete->hash;
     int index = hash_value % HASH_TABLE_SIZE;
 
