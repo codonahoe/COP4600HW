@@ -67,9 +67,17 @@ void insert_record(const char *name, int salary) {
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
 
-    // Create a new record
+    // Search for the record in the hash table
+    hashRecord *existing_record = search_record(name);
+    if (existing_record != NULL) { // Record with the same name already exists, update its salary
+        existing_record->salary = salary;
+        rwlock_release_writelock(&hash_table_lock);
+        return;
+    }
+
+    // Else we must create a new record
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
-    if (new_record == NULL) {
+    if (new_record == NULL) { ///cant allocate memory
         rwlock_release_writelock(&hash_table_lock);
         return;
     }
@@ -83,22 +91,12 @@ void insert_record(const char *name, int salary) {
     if (hash_table[index] == NULL) {
         hash_table[index] = new_record;
     } else {
-        //Update existing record
+        // Append to end of list to avoid collision (chaining)
         hashRecord *current = hash_table[index];
-        while (current != NULL) {
-            if (strcmp(current->name, name) == 0) { //check if name exists
-                //Exists so update the salary
-                current->salary = salary;
-                free(new_record); // Free memory since it's not inserted
-                break;
-            }
-            //else name not found & we need to append to end of list to avoid collision (chaining)
-            if (current->next == NULL) {
-                current->next = new_record;
-                break;
-            }
+        while (current->next != NULL) {
             current = current->next;
         }
+        current->next = new_record;
     }
     // Release the write lock
     rwlock_release_writelock(&hash_table_lock);
