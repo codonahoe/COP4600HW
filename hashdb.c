@@ -15,7 +15,7 @@ int release_count = 0;
 /*
 Concurrent Hash Table implementation: including Jenkins function and all linked list operations
 */
-
+//Jenkins function
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
   size_t i = 0;
   uint32_t hash = 0;
@@ -86,18 +86,7 @@ void insert_record(const char *name, int salary, FILE *output_file) {
     fprintf(output_file, "WRITE LOCK ACQUIRED\n");
     acquisition_count++;
 
-    // Search for the record in the hash table
-    /*hashRecord *existing_record = search_record(name, output_file);
-    if (existing_record != NULL) { // Record with the same name already exists, update its salary
-        existing_record->salary = salary;
-        rwlock_release_writelock(&hash_table_lock);
-        printf("WRITE LOCK RELEASED\n");
-        fprintf(output_file, "WRITE LOCK RELEASED\n");
-        release_count++;
-        return;
-    }*/
-
-    // Create a new record
+    // Create record
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
     if (new_record == NULL) { ///cant allocate memory
         printf("WRITE LOCK RELEASED\n");
