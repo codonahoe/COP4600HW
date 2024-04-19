@@ -8,6 +8,9 @@
 #define HASH_TABLE_SIZE 100
 static hashRecord *hash_table[HASH_TABLE_SIZE];
 static rwlock_t hash_table_lock;
+// Keeps track of locks and releases
+int acquisition_count = 0;
+int release_count = 0;
 
 /*
 Concurrent Hash Table implementation: including Jenkins function and all linked list operations
@@ -40,7 +43,8 @@ hashRecord *search_record(const char *name) {
     // Acquire the read lock
     rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
-    printf("Aquiring Read Lock\n");
+    printf("ACQUIRING READ LOCK\n");
+    acquisition_count++;
 
     // Search for the record in the hash table
     hashRecord *current = hash_table[hash_value % HASH_TABLE_SIZE];
@@ -48,6 +52,8 @@ hashRecord *search_record(const char *name) {
         if (strcmp(current->name, name) == 0) {
             // Release the read lock and return the record
             rwlock_release_readlock(&hash_table_lock);
+            printf("RELEASING READ LOCK\n");
+            release_count++;
             return current;
         }
         current = current->next;
@@ -55,7 +61,8 @@ hashRecord *search_record(const char *name) {
 
     // Release the read lock and return NULL if record not found
     rwlock_release_readlock(&hash_table_lock);
-    printf("Releasing Read Lock\n");
+    printf("RELEASING READ LOCK\n");
+    release_count++;
     return NULL;
 }
 
@@ -64,12 +71,16 @@ void insert_record(const char *name, int salary) {
 
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
+    printf("ACQUIRING WRITE LOCK\n");
+    acquisition_count++;
 
     // Search for the record in the hash table
     hashRecord *existing_record = search_record(name);
     if (existing_record != NULL) { // Record with the same name already exists, update its salary
         existing_record->salary = salary;
         rwlock_release_writelock(&hash_table_lock);
+        printf("RELEASING WRITE LOCK\n");
+        release_count++;
         return;
     }
 
@@ -77,6 +88,8 @@ void insert_record(const char *name, int salary) {
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
     if (new_record == NULL) { ///cant allocate memory
         rwlock_release_writelock(&hash_table_lock);
+        printf("RELEASING WRITE LOCK\n");
+        release_count++;
         return;
     }
     new_record->hash = hash_value;
@@ -97,16 +110,21 @@ void insert_record(const char *name, int salary) {
         current->next = new_record;
     }
     rwlock_release_writelock(&hash_table_lock);
+    printf("RELEASING WRITE LOCK\n");
+    release_count++;
 }
 
 void delete_record(const char *name) {
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
-
+    printf("ACQUIRING WRITE LOCK\n");
+    acquisition_count++;
     // Search for the record to delete
     hashRecord *record_to_delete = search_record(name);
     if (record_to_delete == NULL) { // Record not found, release the write lock and return
         rwlock_release_writelock(&hash_table_lock);
+        printf("RELEASING WRITE LOCK\n");
+        release_count++;
         return;
     }
 
@@ -129,25 +147,77 @@ void delete_record(const char *name) {
     }
     free(record_to_delete);
     rwlock_release_writelock(&hash_table_lock);
+    printf("RELEASING WRITE LOCK\n");
+    release_count++;
 }
 
 // Print a single record
-void print_element(hashRecord *element)
+void print_element(hashRecord* element)
 {
     // Print hash value, name, and salary
-    printf("%d,", element->hash);
+    printf("%u,", element->hash);
     printf("%s,", element->name);
     printf("%d\n", element->salary);
 }
 
-// Print the current list
-void print_all(hashRecord *head)
+// Helper for sorting algorithm
+void swap(hashRecord* a, hashRecord* b)
 {
-    hashRecord *current = head;
-    // Use single record print for each record
-    while (current != NULL)
+    hashRecord temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Print current records in sorted order
+void print_all()
+{
+    rwlock_acquire_readlock(&hash_table_lock);
+    printf("ACQUIRING READ LOCK\n");
+    acquisition_count++;
+    hashRecord* sort[HASH_TABLE_SIZE];
+    int index = 0;
+    // Grab elements of hash table that aren't null
+    for (int i = 0; i < HASH_TABLE_SIZE; i++)
     {
-        print_element(current);
-        current = current->next;
+        if (hash_table[i])
+        {
+            sort[index] = hash_table[i];
+            index++;
+        }
     }
+    int k;
+    // Sort relevant indexes by hash
+    for (int i = 0; i < index; i++)
+    {
+        for (int i = 0; i < index-1; i++)
+        {
+            k = i;
+            for (int j = i+1; j < index; j++)
+            {
+                if (sort[j]->hash < sort[k]->hash)
+                {
+                    k = j;
+                }
+            }
+            if (k != i)
+            {
+                swap(sort[k], sort[i]);
+            }
+        }
+    }
+    // Print resulting array
+    for (int i = 0; i < index; i++)
+    {
+        print_element(sort[i]);
+    }
+    rwlock_release_readlock(&hash_table_lock);
+    printf("RELEASING READ LOCK\n");
+    release_count++;
+}
+
+// Print counts for lock acquire/release
+void print_counts()
+{
+    printf("Number of lock acquisitions: %d\n", acquisition_count);
+    printf("Number of lock releases: %d\n", release_count);
 }

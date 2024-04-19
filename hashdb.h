@@ -18,5 +18,6 @@ void insert_record(const char *name, int salary);
 void delete_record(const char *name);
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length);
 void print_element(hashRecord *element);
-void print_all(hashRecord *head);
+void print_counts();
+void print_all();
 #endif /* HASHDB_H */

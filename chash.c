@@ -37,6 +37,10 @@ int main() {
         //execute_command(command, param1, param2, output_file);
     }
 
+    // Final print
+    print_counts();
+    print_all();
+
     // Close the file
     fclose(file);
     // Close output file
@@ -57,16 +61,19 @@ void execute_command(char *command, char *param1, char *param2) {
         printf("Running %d threads\n", threads);
         //fprintf(output_file, "Running %d threads\n", threads);
     } else if (strcmp(command, "insert") == 0) {
-        // Handle insert command
-        // Not implemented in this basic outline
+        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
+        printf("INSERT,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
+        insert_record(param1, atoi(param2));
     } else if (strcmp(command, "delete") == 0) {
-        // Handle delete command
-        // Not implemented in this basic outline
+        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
+        printf("DELETE,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
+        delete_record(param1);
     } else if (strcmp(command, "search") == 0) {
+        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
+        printf("SEARCH,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
         search_record(param1);
     } else if (strcmp(command, "print") == 0) {
-        // Needs existing linked list to work
-        // print_all(head);
+        print_all();
     } else {
         // Invalid command
         printf("Invalid command: %s\n", command);
