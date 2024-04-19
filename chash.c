@@ -8,8 +8,7 @@
 #define MAX_NAME_LEN 50
 
 void parse_command(char *line, char *command, char *param1, char *param2);
-void execute_command(char *command, char *param1, char *param2);
-//void execute_command(char *command, char *param1, char *param2, FILE *output_file);
+void execute_command(char *command, char *param1, char *param2, FILE *output_file);
 
 int main() {
 
@@ -19,7 +18,7 @@ int main() {
         return 1;
     }
     // Create output file
-    // FILE *output_file = fopen("output.txt", "w");   
+    FILE *output_file = fopen("output.txt", "w");   
 
     char line[MAX_COMMAND_LEN];
 
@@ -33,18 +32,17 @@ int main() {
         parse_command(line, command, param1, param2);
 
         // Execute the command
-        execute_command(command, param1, param2);
-        //execute_command(command, param1, param2, output_file);
+        execute_command(command, param1, param2, output_file);
     }
 
     // Final print
-    print_counts();
-    print_all();
+    print_counts(output_file);
+    print_all(output_file);
 
     // Close the file
     fclose(file);
     // Close output file
-    // fclose(output_file);
+    fclose(output_file);
 
     return 0;
 }
@@ -54,28 +52,27 @@ void parse_command(char *line, char *command, char *param1, char *param2) {
     sscanf(line, "%[^,],%[^,],%s", command, param1, param2);
 }
 
-void execute_command(char *command, char *param1, char *param2) {
-//void execute_command(char *command, char *param1, char *param2, FILE *output_file) {
+void execute_command(char *command, char *param1, char *param2, FILE *output_file) {
     if (strcmp(command, "threads") == 0) {
+        // Threads command
         int threads = thread_count(param1);
         printf("Running %d threads\n", threads);
-        //fprintf(output_file, "Running %d threads\n", threads);
+        fprintf(output_file, "Running %d threads\n", threads);
     } else if (strcmp(command, "insert") == 0) {
-        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
-        printf("INSERT,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
-        insert_record(param1, atoi(param2));
+        // Insert command
+        insert_record(param1, atoi(param2), output_file);
     } else if (strcmp(command, "delete") == 0) {
-        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
-        printf("DELETE,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
-        delete_record(param1);
+        // Delete command
+        delete_record(param1, output_file);
     } else if (strcmp(command, "search") == 0) {
-        uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)param1, strlen(param1));
-        printf("SEARCH,%lu,%s,%s\n", (unsigned long)hash_value, param1, param2);
-        search_record(param1);
+        // Search command
+        search_record(param1, output_file);
     } else if (strcmp(command, "print") == 0) {
-        print_all();
+        // Print command
+        print_all(output_file);
     } else {
         // Invalid command
         printf("Invalid command: %s\n", command);
+        fprintf(output_file, "Invalid command: %s\n", command);
     }
 }

@@ -36,14 +36,18 @@ int thread_count(const char *number)
     return atoi(number);
 }
 
-hashRecord *search_record(const char *name) {
+// Search command
+hashRecord *search_record(const char *name, FILE *output_file) {
     // Compute the hash value for the name
     uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
+    printf("SEARCH,%s\n", name);
+    fprintf(output_file, "SEARCH,%s\n", name);
 
     // Acquire the read lock
     rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
-    printf("ACQUIRING READ LOCK\n");
+    printf("READ LOCK ACQUIRED\n");
+    fprintf(output_file, "READ LOCK ACQUIRED\n");
     acquisition_count++;
 
     // Search for the record in the hash table
@@ -52,7 +56,10 @@ hashRecord *search_record(const char *name) {
         if (strcmp(current->name, name) == 0) {
             // Release the read lock and return the record
             rwlock_release_readlock(&hash_table_lock);
-            printf("RELEASING READ LOCK\n");
+            printf("READ LOCK RELEASED\n");
+            fprintf(output_file, "READ LOCK RELEASED\n");
+            printf("%lu,%s,%u\n", (unsigned long)current->hash, current->name, current->salary);
+            fprintf(output_file, "%lu,%s,%u\n", (unsigned long)current->hash, current->name, current->salary);
             release_count++;
             return current;
         }
@@ -61,25 +68,31 @@ hashRecord *search_record(const char *name) {
 
     // Release the read lock and return NULL if record not found
     rwlock_release_readlock(&hash_table_lock);
-    printf("RELEASING READ LOCK\n");
+    printf("READ LOCK RELEASED\n");
+    fprintf(output_file, "READ LOCK RELEASED\n");
     release_count++;
     return NULL;
 }
 
-void insert_record(const char *name, int salary) {
+// Insert command
+void insert_record(const char *name, int salary, FILE *output_file) {
     uint32_t hash_value = jenkins_one_at_a_time_hash((const uint8_t *)name, strlen(name));
+    printf("INSERT,%lu,%s,%d\n", (unsigned long)hash_value, name, salary);
+    fprintf(output_file, "INSERT,%lu,%s,%d\n", (unsigned long)hash_value, name, salary);
 
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
-    printf("ACQUIRING WRITE LOCK\n");
+    printf("WRITE LOCK ACQUIRED\n");
+    fprintf(output_file, "WRITE LOCK ACQUIRED\n");
     acquisition_count++;
 
     // Search for the record in the hash table
-    hashRecord *existing_record = search_record(name);
+    hashRecord *existing_record = search_record(name, output_file);
     if (existing_record != NULL) { // Record with the same name already exists, update its salary
         existing_record->salary = salary;
         rwlock_release_writelock(&hash_table_lock);
-        printf("RELEASING WRITE LOCK\n");
+        printf("WRITE LOCK RELEASED\n");
+        fprintf(output_file, "WRITE LOCK RELEASED\n");
         release_count++;
         return;
     }
@@ -88,7 +101,8 @@ void insert_record(const char *name, int salary) {
     hashRecord *new_record = (hashRecord *)malloc(sizeof(hashRecord));
     if (new_record == NULL) { ///cant allocate memory
         rwlock_release_writelock(&hash_table_lock);
-        printf("RELEASING WRITE LOCK\n");
+        printf("WRITE LOCK RELEASED\n");
+        fprintf(output_file, "WRITE LOCK RELEASED\n");
         release_count++;
         return;
     }
@@ -110,20 +124,26 @@ void insert_record(const char *name, int salary) {
         current->next = new_record;
     }
     rwlock_release_writelock(&hash_table_lock);
-    printf("RELEASING WRITE LOCK\n");
+    printf("WRITE LOCK RELEASED\n");
+    fprintf(output_file, "WRITE LOCK RELEASED\n");
     release_count++;
 }
 
-void delete_record(const char *name) {
+// Delete command
+void delete_record(const char *name, FILE *output_file) {
+    printf("DELETE,%s\n", name);
+    fprintf(output_file, "DELETE,%s\n", name);
     rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
-    printf("ACQUIRING WRITE LOCK\n");
+    printf("WRITE LOCK ACQUIRED\n");
+    fprintf(output_file, "WRITE LOCK ACQUIRED\n");
     acquisition_count++;
     // Search for the record to delete
-    hashRecord *record_to_delete = search_record(name);
+    hashRecord *record_to_delete = search_record(name, output_file);
     if (record_to_delete == NULL) { // Record not found, release the write lock and return
         rwlock_release_writelock(&hash_table_lock);
-        printf("RELEASING WRITE LOCK\n");
+        printf("WRITE LOCK RELEASED\n");
+        fprintf(output_file, "WRITE LOCK RELEASED\n");
         release_count++;
         return;
     }
@@ -147,24 +167,30 @@ void delete_record(const char *name) {
     }
     free(record_to_delete);
     rwlock_release_writelock(&hash_table_lock);
-    printf("RELEASING WRITE LOCK\n");
+    printf("WRITE LOCK RELEASED\n");
+    fprintf(output_file, "WRITE LOCK RELEASED\n");
     release_count++;
 }
 
 // Print a single record
-void print_element(hashRecord element)
+void print_element(hashRecord element, FILE *output_file)
 {
     // Print hash value, name, and salary
     printf("%u,", element.hash);
+    fprintf(output_file, "%u,", element.hash);
     printf("%s,", element.name);
+    fprintf(output_file, "%s,", element.name);
     printf("%d\n", element.salary);
+    fprintf(output_file, "%d\n", element.salary);
 }
 
 // Print current records in sorted order
-void print_all()
+void print_all(FILE *output_file)
 {
+    rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
-    printf("ACQUIRING READ LOCK\n");
+    printf("READ LOCK ACQUIRED\n");
+    fprintf(output_file, "READ LOCK ACQUIRED\n");
     acquisition_count++;
     hashRecord sort[HASH_TABLE_SIZE];
     int index = 0;
@@ -218,16 +244,19 @@ void print_all()
     // Print resulting array
     for (int i = 0; i < index; i++)
     {
-        print_element(sort[i]);
+        print_element(sort[i], output_file);
     }
     rwlock_release_readlock(&hash_table_lock);
-    printf("RELEASING READ LOCK\n");
+    printf("READ LOCK RELEASED\n");
+    fprintf(output_file, "READ LOCK RELEASED\n");
     release_count++;
 }
 
 // Print counts for lock acquire/release
-void print_counts()
+void print_counts(FILE *output_file)
 {
     printf("Number of lock acquisitions: %d\n", acquisition_count);
+    fprintf(output_file, "Number of lock acquisitions: %d\n", acquisition_count);
     printf("Number of lock releases: %d\n", release_count);
+    fprintf(output_file, "Number of lock releases: %d\n", release_count);
 }
