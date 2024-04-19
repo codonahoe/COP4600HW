@@ -83,6 +83,7 @@ void insert_record(const char *name, int salary) {
     if (hash_table[index] == NULL) {
         hash_table[index] = new_record;
     } else {
+        //Update existing record
         hashRecord *current = hash_table[index];
         //check if name exists
         while (current != NULL) {
@@ -91,7 +92,7 @@ void insert_record(const char *name, int salary) {
                 current->salary = salary;
                 break;
             }
-            //else does not exist & we need to append to end of list
+            //else name not found & we need to append to end of list to avoid collision (chaining)
             if (current->next == NULL) {
                 // Name not found, append the new record
                 current->next = new_record;
