@@ -33,6 +33,8 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
 // Get total count of threads
 int thread_count(const char *number)
 {
+    // Initialize rwlock here since threads is always first line
+    rwlock_init(&hash_table_lock);
     return atoi(number);
 }
 
@@ -44,7 +46,6 @@ hashRecord *search_record(const char *name, FILE *output_file) {
     fprintf(output_file, "SEARCH,%s\n", name);
 
     // Acquire the read lock
-    rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
     /*printf("READ LOCK ACQUIRED\n");
     fprintf(output_file, "READ LOCK ACQUIRED\n");*/
@@ -80,7 +81,6 @@ void insert_record(const char *name, int salary, FILE *output_file) {
     printf("INSERT,%lu,%s,%d\n", (unsigned long)hash_value, name, salary);
     fprintf(output_file, "INSERT,%lu,%s,%d\n", (unsigned long)hash_value, name, salary);
 
-    rwlock_init(&hash_table_lock);
     rwlock_acquire_writelock(&hash_table_lock);
     printf("WRITE LOCK ACQUIRED\n");
     fprintf(output_file, "WRITE LOCK ACQUIRED\n");
@@ -133,7 +133,6 @@ void insert_record(const char *name, int salary, FILE *output_file) {
 void delete_record(const char *name, FILE *output_file) {
     printf("DELETE,%s\n", name);
     fprintf(output_file, "DELETE,%s\n", name);
-    rwlock_init(&hash_table_lock);
     // Print statement here, not inside search function, to match example output
     printf("READ LOCK ACQUIRED\n");
     fprintf(output_file, "READ LOCK ACQUIRED\n");
@@ -186,7 +185,6 @@ void print_element(hashRecord element, FILE *output_file)
 // Print current records in sorted order
 void print_all(FILE *output_file)
 {
-    rwlock_init(&hash_table_lock);
     rwlock_acquire_readlock(&hash_table_lock);
     printf("READ LOCK ACQUIRED\n");
     fprintf(output_file, "READ LOCK ACQUIRED\n");
