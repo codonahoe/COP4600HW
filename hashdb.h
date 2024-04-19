@@ -14,6 +14,8 @@ typedef struct hash_struct
 
 int thread_count(const char *number);
 hashRecord *search_record(const char *name);
+void insert_record(const char *name, int salary);
+void delete_record(const char *name);
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length);
 void print_element(hashRecord *element);
 void print_all(hashRecord *head);
