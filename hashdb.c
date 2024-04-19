@@ -85,23 +85,21 @@ void insert_record(const char *name, int salary) {
     } else {
         //Update existing record
         hashRecord *current = hash_table[index];
-        //check if name exists
         while (current != NULL) {
-            if (strcmp(current->name, name) == 0) {
+            if (strcmp(current->name, name) == 0) { //check if name exists
                 //Exists so update the salary
                 current->salary = salary;
+                free(new_record); // Free memory since it's not inserted
                 break;
             }
             //else name not found & we need to append to end of list to avoid collision (chaining)
             if (current->next == NULL) {
-                // Name not found, append the new record
                 current->next = new_record;
                 break;
             }
             current = current->next;
         }
     }
-
     // Release the write lock
     rwlock_release_writelock(&hash_table_lock);
 }
